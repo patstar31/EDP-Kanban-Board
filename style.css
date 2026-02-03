@@ -17,12 +17,16 @@ body{
     text-align: center;
     width: 100%;
     padding: 1.2rem;
+    position: relative;
 }
 
 h1{
     color: #333;
     margin-bottom: 20px;
     font-size: 2rem;
+    border-bottom:#555 5px solid;
+    padding-bottom: 15px;
+
 }
 
 .board{
@@ -64,12 +68,17 @@ h1{
 .card:active{
     cursor:grabbing;
     transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(223, 45, 45, 0.952);
 }
 
 .list.over{
-    background-color: #333;
+    background-color: #383535;
 }
+.card.hover{
+    border: 2px dashed #f74848;
+    transform: scale(1.05);
+}
+
 
 @media (max-width:770px){
     .board{
@@ -81,4 +90,57 @@ h1{
         width: 80%;
         margin-bottom: 20px;
     }
+}
+
+.addCard{
+    position: absolute;
+    top: 20px;
+    right: 35px;
+}
+
+#AddCardButton{
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#AddCardButton:hover{
+    background-color: #45a049;
+    transform: scale(1.05);
+}
+
+#AddCardButton:active{
+    transform: scale(0.98);
+}
+
+.deleteCard{
+    position: absolute;
+    top: 20px;
+    right: 175px;
+}
+#DeleteCardButton{
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#DeleteCardButton:hover{
+    background-color: #e53935;
+    transform: scale(1.05);
+}
+
+#DeleteCardButton:active{
+    transform: scale(0.98);
 }

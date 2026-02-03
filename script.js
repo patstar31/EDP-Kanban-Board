@@ -1,5 +1,6 @@
 const cards = document.querySelectorAll(".card");
 const lists = document.querySelectorAll(".list");
+const addButton = document.getElementById("add-button");
 
 for(const card of cards){
     card.addEventListener("dragstart", dragStart);
@@ -43,4 +44,10 @@ function dragDrop(e){
     this.appendChild(card);
 
     this.classList.remove("over");
+}
+
+addButton.addEventListener("click", addNewCard);
+
+function addNewCard(){
+     
 }
