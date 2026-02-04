@@ -29,6 +29,45 @@ h1{
 
 }
 
+.search-container{
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#searchInput{
+    flex: 1;
+    max-width: 300px;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+#searchInput:focus{
+    border-color: #555;
+}
+
+#categoryFilter{
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+    background-color: white;
+    transition: border-color 0.3s;
+}
+
+#categoryFilter:focus{
+    border-color: #555;
+}
+
 .board{
     display: flex;
     justify-content: space-around;
@@ -71,6 +110,10 @@ h1{
     box-shadow: 0 4px 8px rgba(223, 45, 45, 0.952);
 }
 
+.card.hidden{
+    display: none;
+}
+
 .list.over{
     background-color: #383535;
 }
@@ -89,6 +132,19 @@ h1{
     .list{
         width: 80%;
         margin-bottom: 20px;
+    }
+
+    .search-container{
+        flex-direction: column;
+        width: 100%;
+    }
+
+    #searchInput{
+        max-width: 80%;
+    }
+
+    #categoryFilter{
+        width: 80%;
     }
 }
 
