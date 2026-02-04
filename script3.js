@@ -51,6 +51,9 @@ function dragDrop(e){
 addButton.addEventListener("click", addNewCard);
 
 function addNewCard(){
+    //create a mini box asking for the name of the newly added task/card 
+
+    //create a div element called enterNamePane
     const enterNamePane = document.createElement("div");
     enterNamePane.id = "enterNamePane";
     enterNamePane.innerHTML = `
@@ -58,6 +61,8 @@ function addNewCard(){
         <input type="text" id="cardNameInput" name="cardNameInput">
     `;
     document.body.appendChild(enterNamePane);
+
+    // Input focus and event listener for Enter key
     const cardNameInput = document.getElementById("cardNameInput");
     cardNameInput.focus();
     cardNameInput.addEventListener("keydown", function(event) {
