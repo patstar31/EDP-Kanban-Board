@@ -2,7 +2,63 @@ const cards = document.querySelectorAll(".card");
 const lists = document.querySelectorAll(".list");
 const addButton = document.getElementById("AddCardButton");
 const deleteButton= document.getElementById("DeleteCardButton");
+const searchInput = document.getElementById("searchInput");
+const categoryFilter = document.getElementById("categoryFilter");
 let cardCounter = 3; // Assuming there are initially 3 cards
+
+function saveCards() {
+    const data = [...document.querySelectorAll(".card")].map(card => ({
+        id: card.id,
+        text: card.textContent,
+        listId: card.parentElement.id
+    }));
+    localStorage.setItem("kanbanCards", JSON.stringify(data));
+}
+
+function loadCards() {
+    const data = JSON.parse(localStorage.getItem("kanbanCards") || "[]");
+
+    document.querySelectorAll(".card").forEach(card => card.remove());
+
+    data.forEach(({ id, text, listId }) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.draggable = true;
+        card.id = id;
+        card.textContent = text;
+        card.addEventListener("dragstart", dragStart);
+        card.addEventListener("dragend", dragEnd);
+
+        document.getElementById(listId).appendChild(card);
+
+        const num = +id.replace("card", "");
+        if (num >= cardCounter) cardCounter = num;
+    });
+}
+
+function filterCards() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const selectedCategory = categoryFilter.value;
+    const allCards = document.querySelectorAll(".card");
+    
+    allCards.forEach(card => {
+        const cardText = card.textContent.toLowerCase();
+        const cardCategory = card.parentElement.id; 
+        
+        const matchesSearch = cardText.includes(searchTerm);
+        
+        const matchesCategory = selectedCategory === "all" || cardCategory === selectedCategory;
+        
+        if (matchesSearch && matchesCategory) {
+            card.classList.remove("hidden");
+        } else {
+            card.classList.add("hidden");
+        }
+    });
+}
+
+searchInput.addEventListener("input", filterCards);
+categoryFilter.addEventListener("change", filterCards);
 
 for(const card of cards){
     card.addEventListener("dragstart", dragStart);
@@ -46,6 +102,8 @@ function dragDrop(e){
     this.appendChild(card);
 
     this.classList.remove("over");
+
+    saveCards();
 }
 
 addButton.addEventListener("click", addNewCard);
@@ -93,6 +151,11 @@ function createActualCard(cardName){
         const firstList = document.getElementById("list1");
         firstList.appendChild(newCard);
 
+        saveCards();
+        
+        if (searchInput.value.trim() !== "") {
+            filterCards();
+        }
    // const cardName = prompt("Enter the name of the new task:");
     /*
     if (cardName && cardName.trim() !== "") {
@@ -118,5 +181,7 @@ function createActualCard(cardName){
 deleteButton.addEventListener("click", deleteCard);
 
 function deleteCard(){
-    
+    saveCards();
 }
+
+window.addEventListener("DOMContentLoaded", loadCards);
