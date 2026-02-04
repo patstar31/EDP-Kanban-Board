@@ -4,6 +4,36 @@ const addButton = document.getElementById("AddCardButton");
 const deleteButton= document.getElementById("DeleteCardButton");
 let cardCounter = 3; // Assuming there are initially 3 cards
 
+function saveCards() {
+    const data = [...document.querySelectorAll(".card")].map(card => ({
+        id: card.id,
+        text: card.textContent,
+        listId: card.parentElement.id
+    }));
+    localStorage.setItem("kanbanCards", JSON.stringify(data));
+}
+
+function loadCards() {
+    const data = JSON.parse(localStorage.getItem("kanbanCards") || "[]");
+
+    document.querySelectorAll(".card").forEach(card => card.remove());
+
+    data.forEach(({ id, text, listId }) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.draggable = true;
+        card.id = id;
+        card.textContent = text;
+        card.addEventListener("dragstart", dragStart);
+        card.addEventListener("dragend", dragEnd);
+
+        document.getElementById(listId).appendChild(card);
+
+        const num = +id.replace("card", "");
+        if (num >= cardCounter) cardCounter = num;
+    });
+}
+
 for(const card of cards){
     card.addEventListener("dragstart", dragStart);
     card.addEventListener("dragend", dragEnd);
@@ -46,6 +76,8 @@ function dragDrop(e){
     this.appendChild(card);
 
     this.classList.remove("over");
+
+    saveCards();
 }
 
 addButton.addEventListener("click", addNewCard);
@@ -88,6 +120,8 @@ function createActualCard(cardName){
         const firstList = document.getElementById("list1");
         firstList.appendChild(newCard);
 
+        saveCards();
+
    // const cardName = prompt("Enter the name of the new task:");
     /*
     if (cardName && cardName.trim() !== "") {
@@ -113,5 +147,7 @@ function createActualCard(cardName){
 deleteButton.addEventListener("click", deleteCard);
 
 function deleteCard(){
-    
+    saveCards();
 }
+
+window.addEventListener("DOMContentLoaded", loadCards);
