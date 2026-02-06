@@ -6,6 +6,7 @@ const searchInput = document.getElementById("searchInput");
 const categoryFilter = document.getElementById("categoryFilter");
 let cardCounter = 0; // Counter for dynamically created cards
 
+//Dan Charbille
 function saveCards() {
     const data = [...document.querySelectorAll(".card")].map(card => {
         // Get text from card-text span or fallback to textContent
@@ -92,6 +93,8 @@ function filterCards() {
 searchInput.addEventListener("input", filterCards);
 categoryFilter.addEventListener("change", filterCards);
 
+
+//Patrick Han
 // Function to edit a card
 function editCard(card) {
     // Create edit panel
@@ -230,6 +233,12 @@ function addNewCard(){
                 createActualCard(cardName); // Call a separate function to build the card
                 enterNamePane.remove();     // Clean up the UI
             }
+        }
+    });
+
+    enterNamePane.addEventListener("click", function(e) {
+        if (e.target === enterNamePane) {
+            enterNamePane.remove();
         }
     });
 }
