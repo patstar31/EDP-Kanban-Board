@@ -261,7 +261,7 @@ function createActualCard(cardName){
         // Add delete button
         const deleteBtn = document.createElement("span");
         deleteBtn.className = "delete-card-btn";
-        deleteBtn.innerHTML = "×";
+        deleteBtn.innerHTML = "X";
         deleteBtn.addEventListener("click", function(e) {
             e.stopPropagation();
             newCard.remove();

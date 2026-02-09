@@ -600,4 +600,565 @@ A: The element that the event listener is attached to.
 
 ---
 
-**Good luck on your exam! 🍀 Remember: JavaScript is the BEHAVIOR — it makes drag-and-drop possible!**
+## 🆕 Extended Features: Persistence, CRUD & Filtering
+
+The Kanban board now includes additional functionality beyond basic drag-and-drop:
+
+- **Create** new cards via modal input
+- **Read** cards from localStorage on page load
+- **Update** card text via edit modal
+- **Delete** cards with × button
+- **Filter** cards by search text and category
+- **Persist** all changes to localStorage
+
+---
+
+### 10. Extended DOM Selection
+
+```javascript
+const cards = document.querySelectorAll(".card");
+const lists = document.querySelectorAll(".list");
+const addButton = document.getElementById("AddCardButton");
+const deleteButton = document.getElementById("DeleteCardButton");
+const searchInput = document.getElementById("searchInput");
+const categoryFilter = document.getElementById("categoryFilter");
+let cardCounter = 0; // Counter for dynamically created cards
+```
+
+| Variable         | What it holds                             | Mutable?      |
+| ---------------- | ----------------------------------------- | ------------- |
+| `cards`          | NodeList of `.card` elements at load time | No (const)    |
+| `lists`          | NodeList of `.list` elements              | No (const)    |
+| `addButton`      | Reference to Add Tasks button             | No (const)    |
+| `searchInput`    | Reference to search text input            | No (const)    |
+| `categoryFilter` | Reference to category dropdown            | No (const)    |
+| `cardCounter`    | Numeric ID suffix for new cards           | **Yes (let)** |
+
+**Why `let` for cardCounter?**
+
+- It needs to be incremented each time a new card is created
+- `const` would prevent reassignment
+
+> **Note:** `cards` is a **static NodeList** — dynamically created cards won't be in it! The code attaches listeners when creating new cards.
+
+---
+
+### 11. localStorage Persistence: `saveCards()`
+
+```javascript
+function saveCards() {
+  const data = [...document.querySelectorAll(".card")].map((card) => {
+    const textSpan = card.querySelector(".card-text");
+    const text = textSpan
+      ? textSpan.textContent.trim()
+      : card.textContent.replace("×", "").trim();
+    return {
+      id: card.id,
+      text: text,
+      listId: card.parentElement.id,
+    };
+  });
+  localStorage.setItem("kanbanCards", JSON.stringify(data));
+}
+```
+
+**Step-by-step breakdown:**
+
+| Step | Code                                 | What it does                         |
+| ---- | ------------------------------------ | ------------------------------------ |
+| 1    | `document.querySelectorAll(".card")` | Get all current cards                |
+| 2    | `[...]`                              | Spread into array (NodeList → Array) |
+| 3    | `.map(card => {...})`                | Transform each card into an object   |
+| 4    | `card.querySelector('.card-text')`   | Find the text span inside card       |
+| 5    | `textSpan.textContent.trim()`        | Get the clean text content           |
+| 6    | `card.parentElement.id`              | Get which list the card is in        |
+| 7    | `JSON.stringify(data)`               | Convert array to JSON string         |
+| 8    | `localStorage.setItem(...)`          | Save to browser storage              |
+
+**Understanding the spread operator `[...]`:**
+
+```javascript
+const nodeList = document.querySelectorAll(".card"); // NodeList
+const array = [...nodeList]; // Array
+// Now we can use .map(), .filter(), etc.
+```
+
+**What gets saved:**
+
+```json
+[
+  { "id": "card1", "text": "Wash Dishes", "listId": "list1" },
+  { "id": "card2", "text": "Buy Groceries", "listId": "list1" },
+  { "id": "card3", "text": "Learn to Code", "listId": "list2" }
+]
+```
+
+> **🔥 Exam Tip:** `localStorage` stores data as **strings only**. Always use `JSON.stringify()` to save objects and `JSON.parse()` to retrieve them!
+
+---
+
+### 12. Loading from Storage: `loadCards()`
+
+```javascript
+function loadCards() {
+  const data = JSON.parse(localStorage.getItem("kanbanCards") || "[]");
+
+  document.querySelectorAll(".card").forEach((card) => card.remove());
+
+  data.forEach(({ id, text, listId }) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.draggable = true;
+    card.id = id;
+
+    // Create text span
+    const textSpan = document.createElement("span");
+    textSpan.className = "card-text";
+    textSpan.textContent = text;
+    card.appendChild(textSpan);
+
+    // Add delete button
+    const deleteBtn = document.createElement("span");
+    deleteBtn.className = "delete-card-btn";
+    deleteBtn.innerHTML = "×";
+    deleteBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      card.remove();
+      saveCards();
+    });
+    card.appendChild(deleteBtn);
+
+    // Attach event listeners
+    card.addEventListener("dragstart", dragStart);
+    card.addEventListener("dragend", dragEnd);
+    card.addEventListener("click", function (e) {
+      if (!e.target.classList.contains("delete-card-btn")) {
+        editCard(card);
+      }
+    });
+
+    document.getElementById(listId).appendChild(card);
+
+    const num = +id.replace("card", "");
+    if (num >= cardCounter) cardCounter = num;
+  });
+}
+```
+
+**Step-by-step breakdown:**
+
+| Step | What happens                                     |
+| ---- | ------------------------------------------------ |
+| 1    | Parse JSON from localStorage (or empty array)    |
+| 2    | Remove ALL existing cards from DOM               |
+| 3    | Loop through saved data                          |
+| 4    | Create new card element with `createElement`     |
+| 5    | Add text span and delete button                  |
+| 6    | Attach all event listeners (drag, click, delete) |
+| 7    | Append card to correct list                      |
+| 8    | Update `cardCounter` to avoid ID collisions      |
+
+**Understanding destructuring: `({ id, text, listId })`**
+
+```javascript
+// Instead of:
+data.forEach((item) => {
+  const id = item.id;
+  const text = item.text;
+  const listId = item.listId;
+});
+
+// We can write:
+data.forEach(({ id, text, listId }) => {
+  // id, text, listId are already available!
+});
+```
+
+**Why remove existing cards first?**
+
+- Prevents duplicates when localStorage has data
+- Ensures a clean slate before reconstructing from storage
+
+**Understanding `e.stopPropagation()`:**
+
+```javascript
+deleteBtn.addEventListener("click", function (e) {
+  e.stopPropagation(); // Prevents the click from bubbling up to the card
+  card.remove(); // Without this, editCard() would also be called!
+});
+```
+
+---
+
+### 13. Search & Filter: `filterCards()`
+
+```javascript
+function filterCards() {
+  const searchTerm = searchInput.value.toLowerCase().trim();
+  const selectedCategory = categoryFilter.value;
+  const allCards = document.querySelectorAll(".card");
+
+  allCards.forEach((card) => {
+    const textSpan = card.querySelector(".card-text");
+    const cardText = textSpan
+      ? textSpan.textContent.toLowerCase().trim()
+      : card.textContent.replace("×", "").toLowerCase().trim();
+    const cardCategory = card.parentElement.id;
+
+    const matchesSearch = cardText.includes(searchTerm);
+    const matchesCategory =
+      selectedCategory === "all" || cardCategory === selectedCategory;
+
+    if (matchesSearch && matchesCategory) {
+      card.classList.remove("hidden");
+    } else {
+      card.classList.add("hidden");
+    }
+  });
+}
+
+searchInput.addEventListener("input", filterCards);
+categoryFilter.addEventListener("change", filterCards);
+```
+
+**Logic breakdown:**
+
+```
+User types "wash" in search box
+         ↓
+searchTerm = "wash"
+         ↓
+For each card:
+  cardText = "wash dishes"
+  matchesSearch = "wash dishes".includes("wash") → true
+  matchesCategory = (selectedCategory === "all") → true
+         ↓
+  Both true → card.classList.remove("hidden") → VISIBLE
+```
+
+**Two conditions must be met:**
+
+| Condition         | Check                                          | Example                              |
+| ----------------- | ---------------------------------------------- | ------------------------------------ |
+| `matchesSearch`   | Text contains search term                      | "wash dishes".includes("wash") = ✅  |
+| `matchesCategory` | Card is in selected category OR "all" selected | card in list1, filter = "list1" = ✅ |
+
+**Event bindings:**
+
+| Event    | Trigger                      | When it fires    |
+| -------- | ---------------------------- | ---------------- |
+| `input`  | User types in search box     | Every keystroke  |
+| `change` | User selects dropdown option | Selection change |
+
+**CSS connection:**
+
+```css
+.card.hidden {
+  display: none;
+}
+```
+
+---
+
+### 14. Edit Card Modal: `editCard()`
+
+```javascript
+function editCard(card) {
+  const editPane = document.createElement("div");
+  editPane.id = "editNamePane";
+
+  const textSpan = card.querySelector(".card-text");
+  const currentText = textSpan
+    ? textSpan.textContent.trim()
+    : card.textContent.replace("×", "").trim();
+
+  editPane.innerHTML = `
+        <label for="editCardInput">Edit Task Name:</label>
+        <input type="text" id="editCardInput" value="${currentText}">
+    `;
+  document.body.appendChild(editPane);
+
+  const editInput = document.getElementById("editCardInput");
+  editInput.focus();
+  editInput.select();
+
+  editInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      const newName = editInput.value.trim();
+      if (newName !== "") {
+        textSpan.textContent = newName;
+        saveCards();
+        editPane.remove();
+      }
+    } else if (event.key === "Escape") {
+      editPane.remove();
+    }
+  });
+
+  editPane.addEventListener("click", function (e) {
+    if (e.target === editPane) {
+      editPane.remove();
+    }
+  });
+}
+```
+
+**User flow:**
+
+```
+┌───────────────────────────────────────────────────────┐
+│  1. User clicks on a card (not the delete button)    │
+│     └─→ editCard(card) is called                     │
+└───────────────────────────────────────────────────────┘
+                         ↓
+┌───────────────────────────────────────────────────────┐
+│  2. Modal appears with current text in input          │
+│     └─→ Input is focused and text is selected        │
+└───────────────────────────────────────────────────────┘
+                         ↓
+┌───────────────────────────────────────────────────────┐
+│  3. User types new text and presses Enter            │
+│     └─→ Card text updated                            │
+│     └─→ saveCards() persists change                  │
+│     └─→ Modal removed                                │
+└───────────────────────────────────────────────────────┘
+```
+
+**Keyboard shortcuts:**
+
+| Key           | Action                 |
+| ------------- | ---------------------- |
+| Enter         | Save changes and close |
+| Escape        | Cancel and close       |
+| Click outside | Cancel and close       |
+
+**Understanding `editInput.select()`:**
+
+- Highlights all text in the input
+- User can immediately start typing to replace
+
+---
+
+### 15. Add New Card: `addNewCard()` and `createActualCard()`
+
+```javascript
+addButton.addEventListener("click", addNewCard);
+
+function addNewCard() {
+  const enterNamePane = document.createElement("div");
+  enterNamePane.id = "enterNamePane";
+  enterNamePane.innerHTML = `
+        <label for="cardNameInput">Enter Task Name:</label>
+        <input type="text" id="cardNameInput">
+    `;
+  document.body.appendChild(enterNamePane);
+
+  const cardNameInput = document.getElementById("cardNameInput");
+  cardNameInput.focus();
+
+  cardNameInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      const cardName = cardNameInput.value.trim();
+      if (cardName !== "") {
+        createActualCard(cardName);
+        enterNamePane.remove();
+      }
+    }
+  });
+
+  enterNamePane.addEventListener("click", function (e) {
+    if (e.target === enterNamePane) {
+      enterNamePane.remove();
+    }
+  });
+}
+```
+
+**Why separate `addNewCard()` and `createActualCard()`?**
+
+- `addNewCard()` handles the **UI** (showing modal, getting input)
+- `createActualCard()` handles the **logic** (creating DOM element, persisting)
+- Separation of concerns = cleaner, more maintainable code
+
+```javascript
+function createActualCard(cardName) {
+  cardCounter++;
+
+  const newCard = document.createElement("div");
+  newCard.className = "card";
+  newCard.draggable = true;
+  newCard.id = "card" + cardCounter;
+
+  // Create text span
+  const textSpan = document.createElement("span");
+  textSpan.className = "card-text";
+  textSpan.textContent = cardName.trim();
+  newCard.appendChild(textSpan);
+
+  // Add delete button
+  const deleteBtn = document.createElement("span");
+  deleteBtn.className = "delete-card-btn";
+  deleteBtn.innerHTML = "X";
+  deleteBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    newCard.remove();
+    saveCards();
+  });
+  newCard.appendChild(deleteBtn);
+
+  // Attach event listeners
+  newCard.addEventListener("dragstart", dragStart);
+  newCard.addEventListener("dragend", dragEnd);
+  newCard.addEventListener("click", function (e) {
+    if (!e.target.classList.contains("delete-card-btn")) {
+      editCard(newCard);
+    }
+  });
+
+  document.getElementById("list1").appendChild(newCard);
+  saveCards();
+
+  if (searchInput.value.trim() !== "") {
+    filterCards();
+  }
+}
+```
+
+**New card always goes to list1 ("To Do")** — this is the standard Kanban workflow where new tasks start in the backlog.
+
+**Why check `searchInput.value` at the end?**
+
+- If the user has an active search, the new card might not match
+- Running `filterCards()` ensures the display stays consistent
+
+---
+
+### 16. Page Load: DOMContentLoaded
+
+```javascript
+window.addEventListener("DOMContentLoaded", loadCards);
+```
+
+**What is DOMContentLoaded?**
+
+- Fires when the HTML is fully parsed
+- Does NOT wait for images, stylesheets, etc.
+- Earlier than `window.onload`
+
+**Why use it?**
+
+- Ensures all HTML elements exist before `loadCards()` runs
+- Restores persisted state as soon as possible
+
+```
+Page Load Timeline:
+─────────────────────────────────────────────────────────────
+HTML parsing starts
+         ↓
+HTML parsing ends ──→ DOMContentLoaded fires ──→ loadCards()
+         ↓
+Images, CSS load
+         ↓
+window.onload fires
+─────────────────────────────────────────────────────────────
+```
+
+---
+
+## 📚 Extended Concepts Summary
+
+### localStorage API
+
+| Method                | Purpose       | Example                                               |
+| --------------------- | ------------- | ----------------------------------------------------- |
+| `setItem(key, value)` | Save data     | `localStorage.setItem("cards", JSON.stringify(data))` |
+| `getItem(key)`        | Retrieve data | `JSON.parse(localStorage.getItem("cards"))`           |
+| `removeItem(key)`     | Delete item   | `localStorage.removeItem("cards")`                    |
+| `clear()`             | Delete all    | `localStorage.clear()`                                |
+
+**Key points:**
+
+- Data persists across browser sessions
+- Storage limit ~5-10MB per domain
+- **Only stores strings** — must stringify/parse objects
+
+---
+
+### Event Propagation
+
+```
+           ┌─────────────┐
+           │   document  │
+           └──────┬──────┘
+                  │ ← Capturing phase (down)
+           ┌──────▼──────┐
+           │    .card    │
+           └──────┬──────┘
+                  │
+           ┌──────▼──────┐
+           │ .delete-btn │ ← Target (event fires)
+           └──────┬──────┘
+                  │ ← Bubbling phase (up)
+                  ▼
+         e.stopPropagation() stops bubbling!
+```
+
+**Why `e.stopPropagation()` on delete button?**
+
+- Without it, clicking delete would also trigger the card's click handler
+- This would open the edit modal right before the card is deleted!
+
+---
+
+### Template Literals
+
+```javascript
+editPane.innerHTML = `
+    <label for="editCardInput">Edit Task Name:</label>
+    <input type="text" id="editCardInput" value="${currentText}">
+`;
+```
+
+**Features:**
+
+- Backticks `` ` `` allow multi-line strings
+- `${variable}` embeds expressions
+- Cleaner than string concatenation
+
+---
+
+## 🎯 Extended Exam Questions
+
+**Q: How does localStorage differ from sessionStorage?**
+A: localStorage persists until explicitly cleared; sessionStorage clears when the tab closes.
+
+**Q: Why use `JSON.stringify()` with localStorage?**
+A: localStorage only stores strings. Objects must be converted to JSON strings.
+
+**Q: What does `e.stopPropagation()` do?**
+A: It prevents the event from bubbling up to parent elements.
+
+**Q: When does DOMContentLoaded fire vs window.onload?**
+A: DOMContentLoaded fires when HTML is parsed; window.onload waits for all resources (images, CSS).
+
+**Q: Why separate `addNewCard()` and `createActualCard()`?**
+A: Separation of concerns — one handles UI, the other handles logic.
+
+---
+
+## ✅ Updated Key Takeaways
+
+1. **`draggable="true"`** in HTML enables dragging
+2. **`dataTransfer`** carries data from dragstart to drop
+3. **`preventDefault()`** is REQUIRED in `dragover` to allow drops
+4. **`appendChild()`** MOVES elements, doesn't copy
+5. **`localStorage`** stores data as strings — use `JSON.stringify/parse`
+6. **`DOMContentLoaded`** fires when HTML is ready (before images load)
+7. **`e.stopPropagation()`** prevents event bubbling to parent elements
+8. **Spread operator `[...]`** converts NodeList to Array for `.map()`
+9. **Destructuring `({ id, text })`** extracts properties from objects
+10. **Template literals** allow multi-line strings with embedded expressions
+
+---
+
+**Good luck on your exam! 🍀 Remember: JavaScript is the BEHAVIOR — it makes everything interactive!**

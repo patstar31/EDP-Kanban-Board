@@ -408,8 +408,125 @@ This HTML file serves as the **skeleton** of our Kanban Board web application. A
     │       └── <div class="list" id="list3">
     │           └── <h2>Done</h2>
     │
-    └── <script> → script.js
+    ├── <div class="addCard">
+    │   └── <button id="AddCardButton">
+    │
+    └── <script> → script3.js
 ```
+
+---
+
+## 🆕 Extended Features: Search, Filter & Card Management
+
+### 16. Search Container
+
+```html
+<div class="search-container">
+  <input type="text" id="searchInput" placeholder="Search tasks..." />
+  <select id="categoryFilter">
+    <option value="all">All Categories</option>
+    <option value="list1">To Do</option>
+    <option value="list2">In Progress</option>
+    <option value="list3">Done</option>
+  </select>
+</div>
+```
+
+**Elements explained:**
+
+| Element                | Purpose                                          |
+| ---------------------- | ------------------------------------------------ |
+| `#searchInput`         | Text input for filtering cards by task name      |
+| `#categoryFilter`      | Dropdown to filter by column                     |
+| `option value="list1"` | Value matches list `id` for easy filtering in JS |
+
+**Why place it above the board?**
+
+- Users naturally look at the top first
+- Provides immediate access to filtering before scanning cards
+
+---
+
+### 17. Updated Card Structure
+
+```html
+<div class="card" draggable="true" id="card1">
+  <span class="card-text">Wash Dishes</span>
+  <span class="delete-card-btn">&times;</span>
+</div>
+```
+
+**Breaking it down:**
+
+| Element            | Purpose                                              |
+| ------------------ | ---------------------------------------------------- |
+| `.card-text`       | Span containing the task text — makes editing easier |
+| `.delete-card-btn` | × button to remove the card                          |
+| `&times;`          | HTML entity for × symbol                             |
+
+**Why separate the text into a `<span>`?**
+
+- Easier to update with JavaScript (`textSpan.textContent = newText`)
+- Delete button doesn't interfere with text manipulation
+- CSS can style text and button independently
+
+---
+
+### 18. Add Tasks Button
+
+```html
+<div class="addCard">
+  <button id="AddCardButton">Add Tasks</button>
+</div>
+```
+
+**Why wrapped in a `<div>`?**
+
+- `.addCard` uses `position: absolute` to place button at top-right
+- Button itself uses default positioning within its container
+
+**JavaScript connection:**
+
+```javascript
+addButton.addEventListener("click", addNewCard);
+```
+
+---
+
+## 🔗 Updated File Relationships
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        index.html                            │
+│                    (The Structure)                           │
+└─────────────────────────────────────────────────────────────┘
+                │                           │
+                │ <link>                    │ <script>
+                ▼                           ▼
+┌───────────────────────────┐   ┌────────────────────────────┐
+│       style.css           │   │        script3.js          │
+│   (The Appearance)        │   │     (The Behavior)         │
+│                           │   │                            │
+│ • Search box styling      │   │ • Drag-and-drop            │
+│ • Delete button styling   │   │ • Add/Edit/Delete cards    │
+│ • Modal pane styling      │   │ • Search & Filter          │
+│ • Hidden card display     │   │ • localStorage persistence │
+└───────────────────────────┘   └────────────────────────────┘
+```
+
+---
+
+## ✅ Updated Key Takeaways
+
+1. **`<!DOCTYPE html>`** prevents rendering issues
+2. **`<meta viewport>`** is ESSENTIAL for mobile-friendly sites
+3. **`id` is unique** (one per page), **`class` is reusable** (many per page)
+4. **`draggable="true"`** enables HTML5 drag-and-drop
+5. **`<link>`** connects CSS, **`<script>`** connects JavaScript
+6. **Script at bottom** = HTML loads before JS runs
+7. **Semantic meaning**: `<h1>` for main title, `<h2>` for section titles
+8. **`<span>` inside cards** separates text from delete button for easier manipulation
+9. **`<select>` values match list IDs** for straightforward filtering
 
 ---
 

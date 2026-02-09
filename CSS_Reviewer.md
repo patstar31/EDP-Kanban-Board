@@ -553,4 +553,237 @@ This is how CSS and JavaScript work together—JS changes classes, CSS responds 
 
 ---
 
+## 🆕 Extended Features: Search, Delete Button & Modals
+
+### 12. Search Container Styling
+
+```css
+.search-container {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#searchInput {
+  flex: 1;
+  max-width: 300px;
+  padding: 10px 15px;
+  font-size: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+#searchInput:focus {
+  border-color: #555;
+}
+```
+
+**Properties explained:**
+
+| Property                   | Value            | Purpose                                |
+| -------------------------- | ---------------- | -------------------------------------- |
+| `display: flex`            | Flexbox layout   | Aligns input and dropdown side-by-side |
+| `gap: 10px`                | Spacing          | Clean gap between elements             |
+| `flex-wrap: wrap`          | Allow wrapping   | Stacks on small screens                |
+| `flex: 1`                  | Flexible width   | Input grows to fill available space    |
+| `max-width: 300px`         | Maximum size     | Prevents input from being too wide     |
+| `transition: border-color` | Smooth animation | Border color change on focus           |
+
+---
+
+### 13. Delete Button Styling
+
+```css
+.delete-card-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  background-color: #ff4444;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    transform 0.2s,
+    background-color 0.2s;
+}
+
+.card:hover .delete-card-btn {
+  opacity: 1;
+}
+
+.delete-card-btn:hover {
+  background-color: #cc0000;
+  transform: scale(1.1);
+}
+```
+
+**Key design decisions:**
+
+| Property                       | Purpose                                                        |
+| ------------------------------ | -------------------------------------------------------------- |
+| `position: absolute`           | Positions relative to `.card` (which has `position: relative`) |
+| `top: 5px; right: 5px`         | Places button at top-right corner of card                      |
+| `border-radius: 50%`           | Creates a perfect circle                                       |
+| `opacity: 0`                   | Hidden by default                                              |
+| `.card:hover .delete-card-btn` | Shows button only when hovering over card                      |
+
+**Why hide by default?**
+
+- Reduces visual noise
+- Prevents accidental clicks
+- Cleaner UI that reveals controls on demand
+
+---
+
+### 14. Hidden Card State
+
+```css
+.card.hidden {
+  display: none;
+}
+```
+
+**What it does:**
+
+- Applied by JavaScript when a card doesn't match the search/filter
+- `display: none` removes the card from layout entirely (not just invisible)
+
+**JavaScript connection:**
+
+```javascript
+card.classList.add("hidden"); // Hide card
+card.classList.remove("hidden"); // Show card
+```
+
+---
+
+### 15. Modal Panes (Add/Edit Task)
+
+```css
+#enterNamePane,
+#editNamePane {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+  border: 3px solid #fff;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translate(-50%, -60%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+```
+
+**Centering technique explained:**
+
+```
+┌────────────────────────────────────────────┐
+│                 Viewport                    │
+│                                            │
+│           position: fixed                  │
+│           top: 50%   ←─── moves top edge   │
+│           left: 50%      to center         │
+│                  ┌────────┐                │
+│                  │ Modal  │                │
+│                  │        │                │
+│                  └────────┘                │
+│           transform: translate(-50%, -50%) │
+│           ↑                                │
+│           shifts modal back by half its    │
+│           own width and height             │
+└────────────────────────────────────────────┘
+```
+
+**Properties explained:**
+
+| Property                           | Purpose                                        |
+| ---------------------------------- | ---------------------------------------------- |
+| `position: fixed`                  | Stays in place even when scrolling             |
+| `top: 50%; left: 50%`              | Positions top-left corner at viewport center   |
+| `transform: translate(-50%, -50%)` | Shifts back by half width/height = true center |
+| `z-index: 1000`                    | Ensures modal appears above all other content  |
+| `linear-gradient(135deg, ...)`     | Purple diagonal gradient background            |
+| `animation: slideIn`               | Smooth entrance animation                      |
+
+> **🔥 Exam Tip:** The combination of `top: 50%`, `left: 50%`, and `transform: translate(-50%, -50%)` is the **standard technique for centering a fixed/absolute element** of unknown size.
+
+---
+
+### 16. Add Button Styling
+
+```css
+.addCard {
+  position: absolute;
+  top: 20px;
+  right: 35px;
+}
+
+#AddCardButton {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+#AddCardButton:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+```
+
+**Why position the wrapper absolutely?**
+
+- Places button at specific location (top-right) relative to `.container`
+- Doesn't interfere with the flexbox layout of the board
+
+---
+
+## ✅ Updated Key Takeaways
+
+1. **Universal reset (`*`)** removes browser defaults
+2. **`display: flex`** with `justify-content` and `align-items` centers content
+3. **`box-sizing: border-box`** makes sizing predictable
+4. **`min-height: 100vh`** ensures full viewport coverage
+5. **`.list.over`** is activated by JavaScript, not CSS hover
+6. **`transform: scale()`** enlarges elements during interaction
+7. **`opacity: 0` + `:hover opacity: 1`** creates reveal-on-hover effects
+8. **`position: fixed` + `translate(-50%, -50%)`** centers modals perfectly
+9. **`display: none`** completely removes elements from layout
+10. **Media queries** make the layout responsive
+
+---
+
 **Good luck on your exam! 🍀 Remember: CSS is about HOW things look and feel!**
