@@ -876,8 +876,10 @@ function editCard(card) {
         <label for="editCardInput">Edit Task Name:</label>
         <input type="text" id="editCardInput" value="${currentText}">
     `;
+  //sets everything into stone
   document.body.appendChild(editPane);
 
+  // focuses the text box for the html element "editCardInput"
   const editInput = document.getElementById("editCardInput");
   editInput.focus();
   editInput.select();
@@ -887,14 +889,16 @@ function editCard(card) {
       const newName = editInput.value.trim();
       if (newName !== "") {
         textSpan.textContent = newName;
-        saveCards();
+          ();
         editPane.remove();
       }
+      //if we press, escape, then the editpane is removed
     } else if (event.key === "Escape") {
       editPane.remove();
     }
   });
 
+  //removed the edit pane when something is clicked in the inside
   editPane.addEventListener("click", function (e) {
     if (e.target === editPane) {
       editPane.remove();

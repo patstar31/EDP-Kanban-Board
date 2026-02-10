@@ -12,12 +12,20 @@ function saveCards() {
         // Get text from card-text span or fallback to textContent
         const textSpan = card.querySelector('.card-text');
         const text = textSpan ? textSpan.textContent.trim() : card.textContent.replace('×', '').trim();
+        
+        // NEW: Find the category span element inside the card
+        const categorySpan = card.querySelector('.card-category');
+        // NEW: If category span exists, get its text content; otherwise use empty string
+        const category = categorySpan ? categorySpan.textContent.trim() : '';
+        
         return {
             id: card.id,
             text: text,
+            category: category, // NEW: Include category in the saved data object
             listId: card.parentElement.id
         };
     });
+    
     localStorage.setItem("kanbanCards", JSON.stringify(data));
 }
 
@@ -26,7 +34,8 @@ function loadCards() {
 
     document.querySelectorAll(".card").forEach(card => card.remove());
 
-    data.forEach(({ id, text, listId }) => {
+    // NEW: Destructure category from the saved data along with id, text, and listId
+    data.forEach(({ id, text, category, listId }) => {
         const card = document.createElement("div");
         card.className = "card";
         card.draggable = true;
@@ -37,6 +46,18 @@ function loadCards() {
         textSpan.className = "card-text";
         textSpan.textContent = text;
         card.appendChild(textSpan);
+        
+        // NEW: Only create và display category span if a category was saved
+        if (category && category.trim() !== '') {
+            // NEW: Create a new span element for the category
+            const categorySpan = document.createElement("span");
+            // NEW: Give it the class 'card-category' for CSS styling
+            categorySpan.className = "card-category";
+            // NEW: Set the text content to the saved category value
+            categorySpan.textContent = category;
+            // NEW: Add the category span to the card (appears below task name)
+            card.appendChild(categorySpan);
+        }
         
         // Add delete button
         const deleteBtn = document.createElement("span");
@@ -76,11 +97,18 @@ function filterCards() {
         // Get text from card-text span or fallback
         const textSpan = card.querySelector('.card-text');
         const cardText = textSpan ? textSpan.textContent.toLowerCase().trim() : card.textContent.replace('×', '').toLowerCase().trim();
-        const cardCategory = card.parentElement.id; 
         
-        const matchesSearch = cardText.includes(searchTerm);
+        // NEW: Find the category span element in the card
+        const categorySpan = card.querySelector('.card-category');
+        // NEW: Get category text in lowercase for case-insensitive search, or empty string if no category
+        const taskCategory = categorySpan ? categorySpan.textContent.toLowerCase().trim() : '';
         
-        const matchesCategory = selectedCategory === "all" || cardCategory === selectedCategory;
+        const cardListId = card.parentElement.id; 
+        
+        // NEW: Check if search term matches either the task name OR the category text
+        const matchesSearch = cardText.includes(searchTerm) || taskCategory.includes(searchTerm);
+        
+        const matchesCategory = selectedCategory === "all" || cardListId === selectedCategory;
         
         if (matchesSearch && matchesCategory) {
             card.classList.remove("hidden");
@@ -105,33 +133,80 @@ function editCard(card) {
     const textSpan = card.querySelector('.card-text');
     const currentText = textSpan ? textSpan.textContent.trim() : card.textContent.replace('×', '').trim();
     
+    // NEW: Find the existing category span in the card
+    const categorySpan = card.querySelector('.card-category');
+    // NEW: Get current category text, or empty string if no category exists
+    const currentCategory = categorySpan ? categorySpan.textContent.trim() : '';
+    
+    // NEW: Added a second input field for editing the category
     editPane.innerHTML = `
         <label for="editCardInput">Edit Task Name:</label>
         <input type="text" id="editCardInput" name="editCardInput" value="${currentText}">
+        <label for="editCategoryInput" style="margin-top: 15px;">Category (optional):</label>
+        <input type="text" id="editCategoryInput" name="editCategoryInput" value="${currentCategory}" placeholder="e.g., House Task">
     `;
     document.body.appendChild(editPane);
 
     // Focus and select all text for easy editing
     const editInput = document.getElementById("editCardInput");
+    // NEW: Get reference to the category input field
+    const editCategoryInput = document.getElementById("editCategoryInput");
     editInput.focus();
     editInput.select();
     
-    // Handle Enter key to save
+    // NEW: Created a separate function to handle saving both task name and category
+    function saveEdit() {
+        const newName = editInput.value.trim();
+        // NEW: Get the new category value from the input field
+        const newCategory = editCategoryInput.value.trim();
+        
+        //checks if the newName isnt empty
+        if (newName !== "") {
+            // Update the card text
+            if (textSpan) {
+                textSpan.textContent = newName;
+            }
+            
+            // NEW: Check if a category span already exists in the card
+            let existingCategorySpan = card.querySelector('.card-category');
+            // NEW: If user entered a category
+            if (newCategory !== '') {
+                // NEW: If no category span exists, create one
+                if (!existingCategorySpan) {
+                    existingCategorySpan = document.createElement("span");
+                    existingCategorySpan.className = "card-category";
+                    // NEW: Find the delete button to insert category before it
+                    const deleteBtn = card.querySelector('.delete-card-btn');
+                    // NEW: Insert category span between task text and delete button
+                    card.insertBefore(existingCategorySpan, deleteBtn);
+                }
+                // NEW: Update the category text content
+                existingCategorySpan.textContent = newCategory;
+            } else if (existingCategorySpan) {
+                // NEW: If user cleared the category input, remove the category span entirely
+                existingCategorySpan.remove();
+            }
+            
+            saveCards();
+            editPane.remove();
+        }
+    }
+    
+    // Handle Enter key to save on both inputs
     editInput.addEventListener("keydown", function(event) {
         if (event.key === "Enter") {
-            const newName = editInput.value.trim();
-            
-            if (newName !== "") {
-                // Update the card text
-                if (textSpan) {
-                    textSpan.textContent = newName;
-                }
-                saveCards();
-                editPane.remove();
-            }
+            saveEdit(); // NEW: Call saveEdit function instead of inline code
         } else if (event.key === "Escape") {
-            // Cancel on Escape key
             editPane.remove();
+        }
+    });
+    
+    // NEW: Add Enter key listener to category input as well
+    editCategoryInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            saveEdit(); // NEW: Pressing Enter in category field also saves
+        } else if (event.key === "Escape") {
+            editPane.remove(); // NEW: Escape key closes the edit pane
         }
     });
     
@@ -216,23 +291,44 @@ function addNewCard(){
     //create a div element called enterNamePane
     const enterNamePane = document.createElement("div");
     enterNamePane.id = "enterNamePane";
+    // NEW: Added a second input field for optional category
     enterNamePane.innerHTML = `
         <label for="cardNameInput">Enter Task Name:</label>
         <input type="text" id="cardNameInput" name="cardNameInput">
+        <label for="cardCategoryInput" style="margin-top: 15px;">Category (optional):</label>
+        <input type="text" id="cardCategoryInput" name="cardCategoryInput" placeholder="e.g., House Task">
     `;
     document.body.appendChild(enterNamePane);
 
     // Input focus and event listener for Enter key
     const cardNameInput = document.getElementById("cardNameInput");
+    // NEW: Get reference to the category input field
+    const cardCategoryInput = document.getElementById("cardCategoryInput");
     cardNameInput.focus();
+    
+    // NEW: Created a separate function to handle form submission
+    function submitCard() {
+        const cardName = cardNameInput.value.trim();
+        // NEW: Get the category value from the input field
+        const cardCategory = cardCategoryInput.value.trim();
+
+        if (cardName !== "") {
+            // NEW: Pass both cardName and cardCategory to createActualCard
+            createActualCard(cardName, cardCategory);
+            enterNamePane.remove();     // Clean up the UI
+        }
+    }
+    
     cardNameInput.addEventListener("keydown", function(event) {
         if (event.key === "Enter") {
-            const cardName = cardNameInput.value.trim();
-
-            if (cardName !== "") {
-                createActualCard(cardName); // Call a separate function to build the card
-                enterNamePane.remove();     // Clean up the UI
-            }
+            submitCard(); // NEW: Call submitCard function
+        }
+    });
+    
+    // NEW: Add Enter key listener to category input field
+    cardCategoryInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            submitCard(); // NEW: Pressing Enter in category field also submits
         }
     });
 
@@ -244,7 +340,8 @@ function addNewCard(){
 }
 
 
-function createActualCard(cardName){   
+// NEW: Added second parameter 'cardCategory' with default value of empty string (optional)
+function createActualCard(cardName, cardCategory = ''){   
     cardCounter++;
     
         const newCard = document.createElement("div");
@@ -257,6 +354,18 @@ function createActualCard(cardName){
         textSpan.className = "card-text";
         textSpan.textContent = cardName.trim();
         newCard.appendChild(textSpan);
+        
+        // NEW: Only create category span if a category was provided (not empty)
+        if (cardCategory && cardCategory.trim() !== '') {
+            // NEW: Create a new span element for the category
+            const categorySpan = document.createElement("span");
+            // NEW: Assign the 'card-category' class for CSS styling
+            categorySpan.className = "card-category";
+            // NEW: Set the text content to the provided category
+            categorySpan.textContent = cardCategory.trim();
+            // NEW: Add the category span to the card (appears after task name)
+            newCard.appendChild(categorySpan);
+        }
         
         // Add delete button
         const deleteBtn = document.createElement("span");

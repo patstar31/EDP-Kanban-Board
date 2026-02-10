@@ -116,6 +116,24 @@ h1{
     padding-right: 30px; /* Make room for delete button */
 }
 
+/* Category label on card - NEW: Styles for the optional category tag */
+.card-category {
+    display: block;             /* NEW: Makes the category appear on its own line below the task name */
+    font-size: 0.8rem;          /* NEW: Smaller font size to distinguish from main task text */
+    color: #666;                /* NEW: Gray color for subtle appearance */
+    background-color: #e8f4fd;  /* NEW: Light blue background to make it look like a tag/label */
+    padding: 4px 8px;           /* NEW: Small padding inside the category tag */
+    border-radius: 12px;        /* NEW: Rounded corners for pill/badge-like appearance */
+    margin-top: 8px;            /* NEW: Space between task name and category */
+    width: fit-content;         /* NEW: Only as wide as the text content */
+    font-style: italic;         /* NEW: Italic text to differentiate from task name */
+}
+
+/* NEW: Adds a folder emoji icon before the category text */
+.card-category::before {
+    content: "📁 ";             /* NEW: Folder emoji followed by space appears before category text */
+}
+
 /* Delete button on card */
 .delete-card-btn {
     position: absolute;
