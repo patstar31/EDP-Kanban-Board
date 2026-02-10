@@ -129,7 +129,7 @@ function editCard(card) {
     const editPane = document.createElement("div");
     editPane.id = "editNamePane";
     
-    // Get current card text
+    // Get card text
     const textSpan = card.querySelector('.card-text');
     const currentText = textSpan ? textSpan.textContent.trim() : card.textContent.replace('×', '').trim();
     
@@ -148,19 +148,20 @@ function editCard(card) {
     document.body.appendChild(editPane);
 
     // Focus and select all text for easy editing
-    const editInput = document.getElementById("editCardInput");
     // NEW: Get reference to the category input field
+    const editInput = document.getElementById("editCardInput");
     const editCategoryInput = document.getElementById("editCategoryInput");
     editInput.focus();
     editInput.select();
     
     // NEW: Created a separate function to handle saving both task name and category
+    // NEW: Get the new category value from the input field
     function saveEdit() {
         const newName = editInput.value.trim();
-        // NEW: Get the new category value from the input field
         const newCategory = editCategoryInput.value.trim();
         
         //checks if the newName isnt empty
+        // Update the card text
         if (newName !== "") {
             // Update the card text
             if (textSpan) {
@@ -168,8 +169,8 @@ function editCard(card) {
             }
             
             // NEW: Check if a category span already exists in the card
-            let existingCategorySpan = card.querySelector('.card-category');
             // NEW: If user entered a category
+            let existingCategorySpan = card.querySelector('.card-category');
             if (newCategory !== '') {
                 // NEW: If no category span exists, create one
                 if (!existingCategorySpan) {
@@ -182,6 +183,8 @@ function editCard(card) {
                 }
                 // NEW: Update the category text content
                 existingCategorySpan.textContent = newCategory;
+
+                
             } else if (existingCategorySpan) {
                 // NEW: If user cleared the category input, remove the category span entirely
                 existingCategorySpan.remove();
